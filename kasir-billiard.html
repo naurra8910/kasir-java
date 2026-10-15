@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kasir Billiard</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e8eeec;--card:#fff;--ink:#12231e;--mute:#5a6e68;--line:#cfdbd7;--felt:#0f5a43;--felt-ink:#fff;--ball:#e3a916;--danger:#b3372f;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1915;--card:#16261f;--ink:#e5f0ec;--mute:#8fa79f;--line:#26392f;--felt:#2fa37c;--felt-ink:#04170f;--ball:#f0bd3a;--danger:#ef8077}}
+:root[data-theme="dark"]{--bg:#0d1915;--card:#16261f;--ink:#e5f0ec;--mute:#8fa79f;--line:#26392f;--felt:#2fa37c;--felt-ink:#04170f;--ball:#f0bd3a;--danger:#ef8077}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Sora",system-ui,sans-serif;line-height:1.5}
+header{background:var(--felt);color:var(--felt-ink);padding:14px 16px}
+header h1{margin:0;font-size:1.25rem;font-weight:800}
+header small{opacity:.85}
+nav{display:flex;gap:6px;max-width:1000px;margin:12px auto 0;padding:0 16px}
+nav button{flex:1;font:inherit;font-weight:600;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+nav button[aria-selected="true"]{background:var(--ball);border-color:var(--ball);color:#241a00}
+.wrap{max-width:1000px;margin:0 auto;padding:12px 16px 24px;display:grid;gap:14px}
+@media(min-width:800px){.two{grid-template-columns:1.3fr 1fr;align-items:start}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+h2{font-size:1.02rem;margin:0 0 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:8px}
+.item{font:inherit;color:inherit;text-align:left;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer}
+.item:hover{border-color:var(--felt)}.item b{display:block;font-size:.92rem}.item span{color:var(--mute);font-size:.84rem}
+.item.main{grid-column:1/-1;border-color:var(--ball)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+.qty{display:flex;align-items:center;gap:6px}
+.qty button{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;cursor:pointer}
+.total{display:flex;justify-content:space-between;font-size:1.3rem;font-weight:800;padding:10px 0}
+label{display:block;font-size:.84rem;color:var(--mute);margin:8px 0 3px}
+input,select{width:100%;font:inherit;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn{width:100%;margin-top:10px;padding:12px;border:0;border-radius:10px;font:inherit;font-weight:600;cursor:pointer;background:var(--felt);color:var(--felt-ink)}
+.btn.alt{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.sm{width:auto;margin:0;padding:6px 10px;font-size:.84rem}
+.quick{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.quick button{font:inherit;font-size:.84rem;padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.msg{margin-top:8px;font-weight:600}.err{color:var(--danger)}
+.empty,.mute{color:var(--mute)}
+.tag{font-size:.78rem;padding:2px 8px;border-radius:20px;background:var(--bg);border:1px solid var(--line)}
+pre{white-space:pre-wrap;font-family:ui-monospace,Menlo,monospace;font-size:.82rem;background:#fff;color:#111;border:1px dashed #999;border-radius:8px;padding:12px;margin:0;max-width:340px}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--ball);outline-offset:2px}
+@media print{body{background:#fff}header,nav,.noprint{display:none!important}.wrap{padding:0}.card{border:0;padding:0}pre{border:0;max-width:80mm}}
+</style>
+</head>
+<body>
+<header class="noprint"><h1>Kasir Billiard</h1><small>Pembayaran tunai (cash) saja</small></header>
+<nav class="noprint" role="tablist">
+  <button role="tab" id="t-kasir" aria-selected="true" onclick="tab('kasir')">Kasir</button>
+  <button role="tab" id="t-booking" aria-selected="false" onclick="tab('booking')">Booking</button>
+</nav>
+
+<main class="wrap">
+<!-- ============ KASIR ============ -->
+<div id="v-kasir" class="two" style="display:grid;gap:14px">
+  <section class="card noprint">
+    <div class="cols">
+      <div><label for="nama">Nama pelanggan</label><input id="nama" placeholder="Nama"></div>
+      <div><label for="meja">Meja</label><select id="meja"></select></div>
+    </div>
+    <h2 style="margin-top:16px">Pilih menu</h2>
+    <div class="grid" id="menu"></div>
+  </section>
+
+  <section class="card">
+    <div class="noprint">
+      <h2>Pesanan</h2>
+      <div id="cart"></div>
+      <div class="total"><span>Total</span><span id="total">Rp0</span></div>
+      <label for="bayar">Uang diterima (tunai)</label>
+      <input id="bayar" type="number" inputmode="numeric" min="0" placeholder="Contoh: 100000">
+      <div class="quick" id="quick"></div>
+      <div class="msg" id="msg" role="status"></div>
+      <button class="btn" onclick="bayar()">Bayar tunai</button>
+      <button class="btn alt" onclick="resetKasir()">Kosongkan pesanan</button>
+    </div>
+    <div id="strukWrap" hidden>
+      <pre id="struk"></pre>
+      <div class="noprint">
+        <button class="btn" onclick="window.print()">Cetak struk</button>
+        <button class="btn alt" onclick="simpan()">Simpan struk (.txt)</button>
+        <button class="btn alt" onclick="resetKasir()">Transaksi baru</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ============ BOOKING ============ -->
+<div id="v-booking" class="two noprint" style="display:none;gap:14px">
+  <section class="card">
+    <h2>Booking meja</h2>
+    <label for="b-nama">Nama</label><input id="b-nama">
+    <label for="b-hp">No. HP / WhatsApp</label><input id="b-hp" inputmode="tel">
+    <div class="cols">
+      <div><label for="b-meja">Meja</label><select id="b-meja"></select></div>
+      <div><label for="b-durasi">Durasi (jam)</label><input id="b-durasi" type="number" min="1" max="12" value="1"></div>
+      <div><label for="b-tgl">Tanggal</label><input id="b-tgl" type="date"></div>
+      <div><label for="b-jam">Jam mulai</label><input id="b-jam" type="time"></div>
+    </div>
+    <div class="msg" id="b-msg" role="status"></div>
+    <button class="btn" onclick="buatBooking()">Kirim booking</button>
+    <p class="mute" style="font-size:.84rem;margin:10px 0 0">Bayar di kasir secara tunai saat main. Tarif meja <span id="tarifTxt"></span> per jam.</p>
+  </section>
+  <section class="card">
+    <h2>Daftar booking</h2>
+    <div id="b-list"></div>
+    <p class="mute" id="b-mode" style="font-size:.8rem"></p>
+  </section>
+</div>
+</main>
+
+<script>
+// ===== Pengaturan (ubah sesuai kebutuhan) =====
+const TARIF = 35000;      // harga sewa meja per jam
+const JUMLAH_MEJA = 6;
+const menu = [
+  {id:"meja",  nama:"Sewa meja / jam", harga:TARIF, utama:true},
+  {id:"teh",   nama:"Es Teh",          harga:5000},
+  {id:"kopi",  nama:"Kopi Hitam",      harga:8000},
+  {id:"air",   nama:"Air Mineral",     harga:4000},
+  {id:"mie",   nama:"Mie Instan",      harga:12000},
+  {id:"nasi",  nama:"Nasi Goreng",     harga:18000},
+  {id:"kentang",nama:"Kentang Goreng", harga:15000}
+];
+
+// ===== State =====
+let cart = {}, bookings = [], db = null, bookingAktif = null, strukTeks = "", noStruk = "";
+const $ = id => document.getElementById(id);
+const rp = n => "Rp" + Number(n).toLocaleString("id-ID");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const cari = id => menu.find(m => m.id === id);
+
+// ===== Tab =====
+function tab(n){
+  for (const t of ["kasir","booking"]){
+    $("v-"+t).style.display = t === n ? "grid" : "none";
+    $("t-"+t).setAttribute("aria-selected", t === n);
+  }
+}
+
+// ===== Keranjang: satu pelanggan bisa pesan banyak menu berbeda =====
+function tambah(id, n = 1){ cart[id] = (cart[id] || 0) + n; if (cart[id] <= 0) delete cart[id]; render(); }
+function hitungTotal(){ return Object.entries(cart).reduce((s,[id,q]) => s + cari(id).harga * q, 0); }
+
+function render(){
+  const ids = Object.keys(cart);
+  $("cart").innerHTML = ids.length ? ids.map(id => {
+    const m = cari(id), q = cart[id];
+    return `<div class="row"><div><b>${m.nama}</b><br><small class="mute">${rp(m.harga)} × ${q} = ${rp(m.harga*q)}</small></div>
+      <div class="qty"><button aria-label="Kurangi ${m.nama}" onclick="tambah('${id}',-1)">−</button><span>${q}</span>
+      <button aria-label="Tambah ${m.nama}" onclick="tambah('${id}',1)">+</button></div></div>`;
+  }).join("") : `<div class="empty">Belum ada pesanan. Pilih menu di sebelah.</div>`;
+  const total = hitungTotal();
+  $("total").textContent = rp(total);
+  const opsi = [...new Set([total, Math.ceil(total/10000)*10000, Math.ceil(total/50000)*50000, Math.ceil(total/100000)*100000])].filter(x => x > 0);
+  $("quick").innerHTML = opsi.map((x,i) => `<button onclick="$('bayar').value=${x}">${i===0 ? "Uang pas" : rp(x)}</button>`).join("");
+}
+
+function pesan(t, err){ $("msg").textContent = t; $("msg").className = "msg" + (err ? " err" : ""); }
+
+// ===== Pembayaran tunai + kembalian =====
+function bayar(){
+  const total = hitungTotal(), uang = Number($("bayar").value);
+  if (!total) return pesan("Pesanan masih kosong.", true);
+  if (!uang || uang < total) return pesan(`Uang kurang ${rp(total - (uang||0))}.`, true);
+  const kembali = uang - total;
+  const now = new Date();
+  noStruk = "BL" + now.getFullYear() + String(now.getMonth()+1).padStart(2,"0") + String(now.getDate()).padStart(2,"0") + "-" + String(now.getHours()).padStart(2,"0") + String(now.getMinutes()).padStart(2,"0") + String(now.getSeconds()).padStart(2,"0");
+  const W = 32, line = (a,b) => a + " ".repeat(Math.max(1, W - a.length - b.length)) + b, sep = "-".repeat(W);
+  const baris = Object.entries(cart).map(([id,q]) => { const m = cari(id); return m.nama + "\n" + line(`  ${q} x ${rp(m.harga)}`, rp(m.harga*q)); }).join("\n");
+  strukTeks = [
+    "KASIR BILLIARD", sep, "No   : " + noStruk, "Waktu: " + now.toLocaleString("id-ID"),
+    "Nama : " + ($("nama").value.trim() || "-"), "Meja : " + ($("meja").value || "-"), sep,
+    baris, sep, line("Total", rp(total)), line("Tunai", rp(uang)), line("Kembali", rp(kembali)), sep,
+    "Pembayaran: TUNAI", "Terima kasih!"
+  ].join("\n");
+  $("struk").textContent = strukTeks;
+  $("strukWrap").hidden = false;
+  pesan("Kembalian: " + rp(kembali));
+  if (bookingAktif) { ubahStatus(bookingAktif, "selesai"); bookingAktif = null; }
+}
+
+async function simpan(){
+  try {
+    const d = await claude.use("downloads");
+    if (!d) throw new Error("tidak tersedia");
+    await d.save({filename:`struk-${noStruk}.txt`, data:strukTeks});
+  } catch(e){ try { await navigator.clipboard.writeText(strukTeks); alert("Struk disalin ke clipboard."); } catch(_) { alert("Gunakan tombol Cetak struk."); } }
+}
+
+function resetKasir(){
+  cart = {}; bookingAktif = null; $("bayar").value = ""; $("nama").value = ""; $("meja").value = "";
+  $("strukWrap").hidden = true; pesan(""); render();
+}
+
+// ===== Booking online (database bersama bila tersedia, jika tidak disimpan di browser ini) =====
+const menit = j => { const [h,m] = j.split(":").map(Number); return h*60+m; };
+const aktif = b => b.status === "menunggu" || b.status === "dipakai";
+
+function bentrok(b){
+  const s = menit(b.jam), e = s + b.durasi*60;
+  return bookings.some(x => aktif(x) && x.meja === b.meja && x.tgl === b.tgl && s < menit(x.jam) + x.durasi*60 && menit(x.jam) < e);
+}
+
+async function simpanLokal(){ try { localStorage.setItem("bk-billiard", JSON.stringify(bookings)); } catch(e){} }
+
+async function buatBooking(){
+  const b = {nama:$("b-nama").value.trim(), hp:$("b-hp").value.trim(), meja:$("b-meja").value, tgl:$("b-tgl").value,
+             jam:$("b-jam").value, durasi:Number($("b-durasi").value), status:"menunggu", dibuat:Date.now()};
+  const m = $("b-msg"); m.className = "msg err";
+  if (!b.nama || !b.hp || !b.tgl || !b.jam || !(b.durasi >= 1)) return m.textContent = "Lengkapi nama, HP, tanggal, jam, dan durasi.";
+  if (bentrok(b)) return m.textContent = `${b.meja} sudah dibooking pada jam tersebut. Pilih meja atau jam lain.`;
+  try {
+    if (db) await db.collection("bookings").add(b);
+    else { b.id = "l" + b.dibuat; bookings.push(b); await simpanLokal(); renderBooking(); }
+    m.className = "msg"; m.textContent = "Booking tersimpan. Sampai jumpa!";
+    $("b-nama").value = $("b-hp").value = "";
+  } catch(e){ m.textContent = "Gagal menyimpan booking. Coba lagi."; }
+}
+
+async function ubahStatus(id, status){
+  try {
+    if (db) await db.doc("bookings/" + id).update({status});
+    else { const b = bookings.find(x => x.id === id); if (b) b.status = status; await simpanLokal(); renderBooking(); }
+  } catch(e){}
+}
+
+function pakaiBooking(id){
+  const b = bookings.find(x => x.id === id); if (!b) return;
+  resetKasir(); bookingAktif = id;
+  $("nama").value = b.nama; $("meja").value = b.meja;
+  tambah("meja", b.durasi);
+  ubahStatus(id, "dipakai"); tab("kasir");
+}
+
+function renderBooking(){
+  const list = [...bookings].sort((a,b) => (a.tgl + a.jam).localeCompare(b.tgl + b.jam));
+  $("b-list").innerHTML = list.length ? list.map(b => `
+    <div class="row" style="align-items:flex-start"><div>
+      <b>${esc(b.meja)}</b> · ${esc(b.tgl)} ${esc(b.jam)} (${Number(b.durasi)} jam)<br>
+      <small class="mute">${esc(b.nama)} · ${esc(b.hp)}</small> <span class="tag">${esc(b.status)}</span></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+        ${b.status === "menunggu" ? `<button class="btn sm" onclick="pakaiBooking('${esc(b.id)}')">Pakai di kasir</button><button class="btn sm alt" onclick="ubahStatus('${esc(b.id)}','batal')">Batal</button>` : ""}
+      </div></div>`).join("") : `<div class="empty">Belum ada booking.</div>`;
+}
+
+async function mulaiBooking(){
+  try { if (window.claude) db = await claude.use("db"); } catch(e){ db = null; }
+  if (db){
+    $("b-mode").textContent = "Booking tersimpan di database bersama (tampil di semua perangkat yang membuka halaman ini).";
+    db.collection("bookings").onSnapshot(s => { bookings = s.docs.map(d => ({id:d.id, ...d.data()})); renderBooking(); }, () => {});
+  } else {
+    $("b-mode").textContent = "Booking tersimpan di browser ini saja.";
+    try { bookings = JSON.parse(localStorage.getItem("bk-billiard") || "[]"); } catch(e){ bookings = []; }
+    renderBooking();
+  }
+}
+
+// ===== Inisialisasi =====
+const mejaOpsi = Array.from({length:JUMLAH_MEJA}, (_,i) => `Meja ${i+1}`);
+$("meja").innerHTML = `<option value="">Tanpa meja</option>` + mejaOpsi.map(m => `<option>${m}</option>`).join("");
+$("b-meja").innerHTML = mejaOpsi.map(m => `<option>${m}</option>`).join("");
+$("tarifTxt").textContent = rp(TARIF);
+$("b-tgl").value = new Date().toISOString().slice(0,10);
+$("menu").innerHTML = menu.map(m => `<button class="item${m.utama ? " main" : ""}" onclick="tambah('${m.id}')"><b>${m.nama}</b><span>${rp(m.harga)}</span></button>`).join("");
+render(); mulaiBooking();
+</script>
+</body>
+</html>
